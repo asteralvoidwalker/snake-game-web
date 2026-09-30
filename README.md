@@ -86,7 +86,7 @@ Possible additions:
 
 ## 📸 Preview
 
-*Add a screenshot or GIF of the game here.*
+(assets/preview.png)
 
 ## 📜 License
 
