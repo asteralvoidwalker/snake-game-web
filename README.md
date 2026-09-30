@@ -86,7 +86,7 @@ Possible additions:
 
 ## 📸 Preview
 
-(assets/preview.png)
+![Preview](assets/preview.png)
 
 ## 📜 License
 
