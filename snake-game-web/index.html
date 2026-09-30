@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake — Python Edition</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        min-height: 100vh;
+        background: #080c12;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .game-wrapper {
+        width: min(700px, 96vw);
+        text-align: center;
+    }
+
+    .game-title {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        color: #6ee56b;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin-bottom: 14px;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 600px;
+        max-width: 100%;
+        margin: auto;
+        padding: 0 8px 10px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .stat {
+        min-width: 100px;
+    }
+
+    .stat:nth-child(1) {
+        text-align: left;
+    }
+
+    .stat:nth-child(2) {
+        text-align: center;
+    }
+
+    .stat:nth-child(3) {
+        text-align: right;
+    }
+
+    .stat-label {
+        color: #8492a1;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    canvas {
+        display: block;
+        width: 600px;
+        height: 600px;
+        max-width: 100%;
+        aspect-ratio: 1;
+        margin: auto;
+        background: #080c12;
+        border: 3px solid #405060;
+        border-radius: 8px;
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.02),
+            0 15px 50px rgba(0,0,0,0.45);
+    }
+
+    .controls {
+        color: #697583;
+        font-size: 11px;
+        margin-top: 12px;
+    }
+
+    .controls span {
+        color: #aab4bf;
+    }
+
+    /* Overlay */
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 10, 0.92);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        padding: 20px;
+    }
+
+    .overlay.hidden {
+        display: none;
+    }
+
+    .menu-card {
+        width: min(440px, 92vw);
+        padding: 45px 30px;
+        border: 1px solid #26313d;
+        border-radius: 20px;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(22, 30, 40, 0.98),
+                rgba(8, 12, 18, 0.98)
+            );
+        box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+    }
+
+    .menu-logo {
+        font-size: 56px;
+        font-weight: 900;
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+    }
+
+    .menu-subtitle {
+        color: #6ee56b;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        margin-bottom: 45px;
+    }
+
+    .menu-button {
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 7px 0;
+        background: #18212b;
+        color: white;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.15s ease;
+    }
+
+    .menu-button:hover {
+        background: #24313d;
+        transform: translateY(-1px);
+    }
+
+    .start-button {
+        background: #6ee56b;
+        color: #071008;
+    }
+
+    .start-button:hover {
+        background: #83ef80;
+    }
+
+    .difficulty {
+        margin: 20px 0 5px;
+        color: #aab4bf;
+        font-size: 14px;
+    }
+
+    .difficulty strong {
+        color: white;
+    }
+
+    .high-score {
+        margin-top: 28px;
+        color: #ffd84d;
+        font-size: 15px;
+    }
+
+    .help {
+        color: #697583;
+        font-size: 11px;
+        margin-top: 30px;
+    }
+
+    /* Game over */
+
+    .game-over-title {
+        color: #ff4655;
+        font-size: 42px;
+        font-weight: 900;
+        margin-bottom: 15px;
+    }
+
+    .final-score {
+        font-size: 21px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .final-best {
+        color: #ffd84d;
+        font-size: 16px;
+        margin-bottom: 35px;
+    }
+
+    /* Pause */
+
+    .pause-title {
+        font-size: 40px;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .pause-text {
+        color: #9ba7b3;
+        font-size: 14px;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 650px) {
+        body {
+            overflow: auto;
+        }
+
+        .game-wrapper {
+            padding: 12px;
+        }
+
+        .game-title {
+            font-size: 24px;
+        }
+
+        .stats {
+            font-size: 12px;
+        }
+
+        .controls {
+            line-height: 1.6;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="game-wrapper">
+
+    <div class="game-title">🐍 SNAKE</div>
+
+    <div class="subtitle">PYTHON EDITION</div>
+
+    <div class="stats">
+
+        <div class="stat">
+            <span class="stat-label">Score</span>
+            <span id="score">0</span>
+        </div>
+
+        <div class="stat">
+            <span class="stat-label">Level</span>
+            <span id="level">1</span>
+        </div>
+
+        <div class="stat">
+            <span class="stat-label">Best</span>
+            <span id="highScore">0</span>
+        </div>
+
+    </div>
+
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <div class="controls">
+        <span>WASD</span> / <span>Arrow Keys</span>
+        &nbsp; • &nbsp;
+        <span>P</span> Pause
+        &nbsp; • &nbsp;
+        <span>R</span> Restart
+        &nbsp; • &nbsp;
+        <span>ESC</span> Menu
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     MAIN MENU
+========================================================= -->
+
+<div class="overlay" id="menuOverlay">
+
+    <div class="menu-card">
+
+        <div class="menu-logo">🐍 SNAKE</div>
+
+        <div class="menu-subtitle">
+            PYTHON EDITION
+        </div>
+
+        <button
+            class="menu-button start-button"
+            id="startButton">
+            PRESS ENTER TO START
+        </button>
+
+        <button
+            class="menu-button"
+            id="difficultyButton">
+            CHANGE DIFFICULTY
+        </button>
+
+        <div class="difficulty">
+            Difficulty:
+            <strong id="difficultyText">Normal</strong>
+        </div>
+
+        <div class="high-score">
+            🏆 High Score:
+            <span id="menuHighScore">0</span>
+        </div>
+
+        <div class="help">
+            WASD / Arrow Keys to move
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     GAME OVER
+========================================================= -->
+
+<div class="overlay hidden" id="gameOverOverlay">
+
+    <div class="menu-card">
+
+        <div class="game-over-title">
+            GAME OVER
+        </div>
+
+        <div class="final-score">
+            Score:
+            <span id="finalScore">0</span>
+        </div>
+
+        <div class="final-best">
+            Best:
+            <span id="finalBest">0</span>
+        </div>
+
+        <button
+            class="menu-button start-button"
+            id="restartButton">
+            RESTART
+        </button>
+
+        <button
+            class="menu-button"
+            id="menuButton">
+            MAIN MENU
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     PAUSE
+========================================================= -->
+
+<div class="overlay hidden" id="pauseOverlay">
+
+    <div class="menu-card">
+
+        <div class="pause-title">
+            PAUSED
+        </div>
+
+        <div class="pause-text">
+            Press P to continue
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+"use strict";
+
+/* ============================================================
+   CANVAS
+============================================================ */
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const CELL_SIZE = 20;
+const GRID_SIZE = 30;
+
+
+/* ============================================================
+   DIFFICULTIES
+============================================================ */
+
+const DIFFICULTIES = {
+    Easy: 130,
+    Normal: 95,
+    Hard: 65,
+    Insane: 45
+};
+
+const difficultyNames = Object.keys(DIFFICULTIES);
+
+let difficulty = "Normal";
+let gameDelay = DIFFICULTIES[difficulty];
+
+
+/* ============================================================
+   GAME STATE
+============================================================ */
+
+let snake = [];
+
+let direction = "stop";
+let nextDirection = "stop";
+
+let food = {
+    x: 0,
+    y: 0,
+    type: "normal"
+};
+
+let score = 0;
+let level = 1;
+let highScore = 0;
+
+let specialFoodTimer = 0;
+
+let gameRunning = false;
+let paused = false;
+
+let lastUpdate = 0;
+let animationFrame;
+
+
+/* ============================================================
+   HTML ELEMENTS
+============================================================ */
+
+const scoreElement = document.getElementById("score");
+const levelElement = document.getElementById("level");
+const highScoreElement = document.getElementById("highScore");
+
+const menuOverlay = document.getElementById("menuOverlay");
+const gameOverOverlay = document.getElementById("gameOverOverlay");
+const pauseOverlay = document.getElementById("pauseOverlay");
+
+const difficultyText = document.getElementById("difficultyText");
+const menuHighScore = document.getElementById("menuHighScore");
+
+const finalScore = document.getElementById("finalScore");
+const finalBest = document.getElementById("finalBest");
+
+const startButton = document.getElementById("startButton");
+const difficultyButton = document.getElementById("difficultyButton");
+const restartButton = document.getElementById("restartButton");
+const menuButton = document.getElementById("menuButton");
+
+
+/* ============================================================
+   HIGH SCORE
+============================================================ */
+
+function loadHighScore() {
+
+    try {
+
+        const saved = localStorage.getItem("snakeHighScore");
+
+        if (saved !== null) {
+
+            highScore = Number(saved);
+
+            if (!Number.isFinite(highScore)) {
+                highScore = 0;
+            }
+        }
+
+    } catch (error) {
+
+        highScore = 0;
+    }
+
+    updateUI();
+}
+
+
+function saveHighScore() {
+
+    try {
+
+        localStorage.setItem(
+            "snakeHighScore",
+            String(highScore)
+        );
+
+    } catch (error) {
+
+        // localStorage may be disabled.
+    }
+}
+
+
+/* ============================================================
+   UI
+============================================================ */
+
+function updateUI() {
+
+    scoreElement.textContent = score;
+    levelElement.textContent = level;
+    highScoreElement.textContent = highScore;
+
+    menuHighScore.textContent = highScore;
+
+    difficultyText.textContent = difficulty;
+}
+
+
+/* ============================================================
+   DRAW BACKGROUND
+============================================================ */
+
+function drawBackground() {
+
+    ctx.fillStyle = "#080c12";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    // Grid
+    ctx.strokeStyle = "#121923";
+    ctx.lineWidth = 1;
+
+    for (
+        let x = 0;
+        x <= canvas.width;
+        x += CELL_SIZE
+    ) {
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+
+    for (
+        let y = 0;
+        y <= canvas.height;
+        y += CELL_SIZE
+    ) {
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+}
+
+
+/* ============================================================
+   DRAW FOOD
+============================================================ */
+
+function drawFood() {
+
+    const centerX =
+        food.x * CELL_SIZE + CELL_SIZE / 2;
+
+    const centerY =
+        food.y * CELL_SIZE + CELL_SIZE / 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        centerX,
+        centerY,
+        food.type === "special" ? 9 : 7,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        food.type === "special"
+            ? "#ffd84d"
+            : "#ff4655";
+
+    ctx.fill();
+
+    // Glow
+    ctx.shadowBlur =
+        food.type === "special" ? 18 : 10;
+
+    ctx.shadowColor =
+        food.type === "special"
+            ? "#ffd84d"
+            : "#ff4655";
+
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // Special food star
+    if (food.type === "special") {
+
+        ctx.fillStyle = "#fff4a3";
+
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(
+            "★",
+            centerX,
+            centerY
+        );
+    }
+}
+
+
+/* ============================================================
+   DRAW SNAKE
+============================================================ */
+
+function drawSnake() {
+
+    snake.forEach((segment, index) => {
+
+        const x = segment.x * CELL_SIZE;
+        const y = segment.y * CELL_SIZE;
+
+        const padding = 2;
+
+        ctx.beginPath();
+
+        roundRect(
+            ctx,
+            x + padding,
+            y + padding,
+            CELL_SIZE - padding * 2,
+            CELL_SIZE - padding * 2,
+            4
+        );
+
+        if (index === 0) {
+
+            ctx.fillStyle = "#6ee56b";
+
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#6ee56b";
+
+        } else {
+
+            ctx.fillStyle = "#36c95b";
+
+            ctx.shadowBlur = 0;
+        }
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+    });
+
+
+    // Eyes
+    if (snake.length > 0) {
+
+        const head = snake[0];
+
+        const baseX = head.x * CELL_SIZE;
+        const baseY = head.y * CELL_SIZE;
+
+        ctx.fillStyle = "#071008";
+
+        let eye1;
+        let eye2;
+
+        if (direction === "up") {
+
+            eye1 = [baseX + 6, baseY + 6];
+            eye2 = [baseX + 14, baseY + 6];
+
+        } else if (direction === "down") {
+
+            eye1 = [baseX + 6, baseY + 14];
+            eye2 = [baseX + 14, baseY + 14];
+
+        } else if (direction === "left") {
+
+            eye1 = [baseX + 6, baseY + 6];
+            eye2 = [baseX + 6, baseY + 14];
+
+        } else {
+
+            eye1 = [baseX + 14, baseY + 6];
+            eye2 = [baseX + 14, baseY + 14];
+        }
+
+        ctx.beginPath();
+
+        ctx.arc(
+            eye1[0],
+            eye1[1],
+            1.7,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.arc(
+            eye2[0],
+            eye2[1],
+            1.7,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+}
+
+
+/* ============================================================
+   ROUNDED RECTANGLE
+============================================================ */
+
+function roundRect(
+    context,
+    x,
+    y,
+    width,
+    height,
+    radius
+) {
+
+    context.beginPath();
+
+    context.moveTo(x + radius, y);
+
+    context.lineTo(
+        x + width - radius,
+        y
+    );
+
+    context.quadraticCurveTo(
+        x + width,
+        y,
+        x + width,
+        y + radius
+    );
+
+    context.lineTo(
+        x + width,
+        y + height - radius
+    );
+
+    context.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - radius,
+        y + height
+    );
+
+    context.lineTo(
+        x + radius,
+        y + height
+    );
+
+    context.quadraticCurveTo(
+        x,
+        y + height,
+        x,
+        y + height - radius
+    );
+
+    context.lineTo(
+        x,
+        y + radius
+    );
+
+    context.quadraticCurveTo(
+        x,
+        y,
+        x + radius,
+        y
+    );
+
+    context.closePath();
+}
+
+
+/* ============================================================
+   DRAW GAME
+============================================================ */
+
+function drawGame() {
+
+    drawBackground();
+    drawFood();
+    drawSnake();
+}
+
+
+/* ============================================================
+   RANDOM FOOD
+============================================================ */
+
+function placeFood() {
+
+    food.type =
+        Math.random() < 0.15
+            ? "special"
+            : "normal";
+
+    specialFoodTimer =
+        food.type === "special"
+            ? 80
+            : 0;
+
+    let valid = false;
+
+    while (!valid) {
+
+        food.x =
+            Math.floor(Math.random() * GRID_SIZE);
+
+        food.y =
+            Math.floor(Math.random() * GRID_SIZE);
+
+        valid = true;
+
+        for (const segment of snake) {
+
+            if (
+                segment.x === food.x &&
+                segment.y === food.y
+            ) {
+
+                valid = false;
+                break;
+            }
+        }
+    }
+}
+
+
+/* ============================================================
+   RESET GAME
+============================================================ */
+
+function resetGame() {
+
+    score = 0;
+    level = 1;
+
+    direction = "stop";
+    nextDirection = "stop";
+
+    gameDelay = DIFFICULTIES[difficulty];
+
+    specialFoodTimer = 0;
+
+    snake = [
+        {
+            x: 15,
+            y: 15
+        }
+    ];
+
+    placeFood();
+
+    updateUI();
+    drawGame();
+}
+
+
+/* ============================================================
+   START
+============================================================ */
+
+function startGame() {
+
+    cancelAnimationFrame(animationFrame);
+
+    menuOverlay.classList.add("hidden");
+    gameOverOverlay.classList.add("hidden");
+    pauseOverlay.classList.add("hidden");
+
+    resetGame();
+
+    gameRunning = true;
+    paused = false;
+
+    lastUpdate = performance.now();
+
+    animationFrame =
+        requestAnimationFrame(gameLoop);
+}
+
+
+/* ============================================================
+   GAME OVER
+============================================================ */
+
+function gameOver() {
+
+    gameRunning = false;
+    paused = false;
+
+    cancelAnimationFrame(animationFrame);
+
+    if (score > highScore) {
+
+        highScore = score;
+
+        saveHighScore();
+    }
+
+    updateUI();
+
+    finalScore.textContent = score;
+    finalBest.textContent = highScore;
+
+    gameOverOverlay.classList.remove("hidden");
+}
+
+
+/* ============================================================
+   PAUSE
+============================================================ */
+
+function togglePause() {
+
+    if (!gameRunning) {
+        return;
+    }
+
+    paused = !paused;
+
+    if (paused) {
+
+        pauseOverlay.classList.remove("hidden");
+
+    } else {
+
+        pauseOverlay.classList.add("hidden");
+
+        lastUpdate = performance.now();
+    }
+}
+
+
+/* ============================================================
+   LEVEL SYSTEM
+============================================================ */
+
+function updateLevel() {
+
+    const newLevel =
+        Math.min(
+            10,
+            Math.floor(score / 5) + 1
+        );
+
+    if (newLevel !== level) {
+
+        level = newLevel;
+
+        const baseSpeed =
+            DIFFICULTIES[difficulty];
+
+        gameDelay =
+            Math.max(
+                25,
+                baseSpeed - ((level - 1) * 7)
+            );
+    }
+}
+
+
+/* ============================================================
+   COLLISION
+============================================================ */
+
+function hitWall(head) {
+
+    return (
+        head.x < 0 ||
+        head.x >= GRID_SIZE ||
+        head.y < 0 ||
+        head.y >= GRID_SIZE
+    );
+}
+
+
+function hitSelf(head) {
+
+    for (
+        let i = 1;
+        i < snake.length;
+        i++
+    ) {
+
+        if (
+            head.x === snake[i].x &&
+            head.y === snake[i].y
+        ) {
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/* ============================================================
+   MOVE SNAKE
+============================================================ */
+
+function moveSnake() {
+
+    direction = nextDirection;
+
+    if (direction === "stop") {
+        return;
+    }
+
+    const head = {
+        x: snake[0].x,
+        y: snake[0].y
+    };
+
+    if (direction === "up") {
+        head.y--;
+    }
+
+    if (direction === "down") {
+        head.y++;
+    }
+
+    if (direction === "left") {
+        head.x--;
+    }
+
+    if (direction === "right") {
+        head.x++;
+    }
+
+    if (hitWall(head)) {
+
+        gameOver();
+        return;
+    }
+
+    if (hitSelf(head)) {
+
+        gameOver();
+        return;
+    }
+
+    snake.unshift(head);
+
+    // Food
+    if (
+        head.x === food.x &&
+        head.y === food.y
+    ) {
+
+        if (food.type === "special") {
+
+            score += 3;
+
+        } else {
+
+            score += 1;
+        }
+
+        if (score > highScore) {
+
+            highScore = score;
+
+            saveHighScore();
+        }
+
+        updateLevel();
+
+        placeFood();
+
+        updateUI();
+
+    } else {
+
+        snake.pop();
+    }
+}
+
+
+/* ============================================================
+   GAME LOOP
+============================================================ */
+
+function gameLoop(timestamp) {
+
+    if (!gameRunning) {
+        return;
+    }
+
+    if (paused) {
+
+        animationFrame =
+            requestAnimationFrame(gameLoop);
+
+        return;
+    }
+
+    if (
+        timestamp - lastUpdate >= gameDelay
+    ) {
+
+        lastUpdate = timestamp;
+
+        moveSnake();
+
+        if (!gameRunning) {
+            drawGame();
+            return;
+        }
+
+        if (specialFoodTimer > 0) {
+
+            specialFoodTimer--;
+
+            if (specialFoodTimer <= 0) {
+
+                placeFood();
+            }
+        }
+    }
+
+    drawGame();
+
+    animationFrame =
+        requestAnimationFrame(gameLoop);
+}
+
+
+/* ============================================================
+   DIFFICULTY
+============================================================ */
+
+function changeDifficulty() {
+
+    const currentIndex =
+        difficultyNames.indexOf(difficulty);
+
+    const nextIndex =
+        (currentIndex + 1)
+        % difficultyNames.length;
+
+    difficulty =
+        difficultyNames[nextIndex];
+
+    gameDelay =
+        DIFFICULTIES[difficulty];
+
+    updateUI();
+}
+
+
+/* ============================================================
+   RETURN TO MENU
+============================================================ */
+
+function backToMenu() {
+
+    gameRunning = false;
+    paused = false;
+
+    cancelAnimationFrame(animationFrame);
+
+    pauseOverlay.classList.add("hidden");
+    gameOverOverlay.classList.add("hidden");
+
+    menuOverlay.classList.remove("hidden");
+
+    updateUI();
+}
+
+
+/* ============================================================
+   KEYBOARD CONTROLS
+============================================================ */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        const key =
+            event.key.toLowerCase();
+
+        // Prevent page scrolling
+        if (
+            [
+                "arrowup",
+                "arrowdown",
+                "arrowleft",
+                "arrowright",
+                " "
+            ].includes(event.key)
+        ) {
+
+            event.preventDefault();
+        }
+
+
+        // UP
+        if (
+            key === "w" ||
+            event.key === "ArrowUp"
+        ) {
+
+            if (direction !== "down") {
+                nextDirection = "up";
+            }
+        }
+
+
+        // DOWN
+        if (
+            key === "s" ||
+            event.key === "ArrowDown"
+        ) {
+
+            if (direction !== "up") {
+                nextDirection = "down";
+            }
+        }
+
+
+        // LEFT
+        if (
+            key === "a" ||
+            event.key === "ArrowLeft"
+        ) {
+
+            if (direction !== "right") {
+                nextDirection = "left";
+            }
+        }
+
+
+        // RIGHT
+        if (
+            key === "d" ||
+            event.key === "ArrowRight"
+        ) {
+
+            if (direction !== "left") {
+                nextDirection = "right";
+            }
+        }
+
+
+        // Pause
+        if (key === "p") {
+
+            togglePause();
+        }
+
+
+        // Restart
+        if (key === "r") {
+
+            if (gameRunning) {
+
+                resetGame();
+
+            } else {
+
+                startGame();
+            }
+        }
+
+
+        // Escape
+        if (event.key === "Escape") {
+
+            backToMenu();
+        }
+
+
+        // Enter
+        if (event.key === "Enter") {
+
+            if (
+                !gameRunning &&
+                !menuOverlay.classList.contains("hidden")
+            ) {
+
+                startGame();
+            }
+        }
+    }
+);
+
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+difficultyButton.addEventListener(
+    "click",
+    changeDifficulty
+);
+
+restartButton.addEventListener(
+    "click",
+    startGame
+);
+
+menuButton.addEventListener(
+    "click",
+    backToMenu
+);
+
+
+/* ============================================================
+   INITIALIZE
+============================================================ */
+
+loadHighScore();
+
+resetGame();
+
+drawGame();
+
+</script>
+
+</body>
+</html>
